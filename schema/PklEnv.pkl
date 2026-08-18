@@ -1,0 +1,100 @@
+//===----------------------------------------------------------------------===//
+// Base module for pklenv environment configs.
+//
+// Amend this from an `env.pkl` (or `env.<environment>.pkl`) file, pinned to a
+// tag rather than to a branch — this module is the contract the config is
+// checked against, and an unpinned URL moves it under a file that validates
+// today:
+//
+//     amends "https://raw.githubusercontent.com/idleberg/pklenv/v0.1.0/schema/PklEnv.pk"
+//
+//     redactions { "*_TOKEN"; "*_SECRET" }
+//
+//     vars {
+//       ["NODE_ENV"] = "production"
+//       ["DATABASE_URL"] = read("env:DATABASE_URL")
+//       ["LEGACY_KEY"] = new Var { value = "not-actually-secret"; redact = false }
+//     }
+//
+// Values can also be selected from the environment in bulk, since `read*`
+// returns every match as a Mapping:
+//
+//     vars {
+//       for (k, v in read*("env:APP_*")) {
+//         [k.drop(4)] = v // drop the "env:" prefix the key carries
+//       }
+//     }
+//===----------------------------------------------------------------------===//
+@ModuleInfo { minPklVersion = "0.29.0" }
+open module pklenv.PklEnv
+
+/// A single environment variable, with an explicit redaction decision attached.
+///
+/// Use this form only when the [redactions] globs don't say the right thing for
+/// this one variable — `redact = true` to mask a value the globs don't match,
+/// `redact = false` to waive one they do.
+///
+/// An explicit `redact = false` also silences pklenv's "this name looks
+/// sensitive but isn't redacted" warning: it records that somebody looked.
+class Var {
+  /// The value assigned to the environment variable.
+  value: String
+
+  /// Whether the value is masked in pklenv's output.
+  ///
+  /// `null` (the default) means undeclared — the [redactions] globs decide.
+  redact: Boolean?
+}
+
+/// A variable's value. Non-string scalars are accepted for convenience and
+/// converted; environment variables are strings at the OS level regardless.
+typealias VarValue = String | Int | Float | Boolean | Var
+
+/// A valid environment variable name: letters, digits and underscores, not
+/// starting with a digit.
+///
+/// Constraining the key type means a malformed name fails at the line that
+/// declares it, rather than later in the CLI. pklenv checks names again before
+/// writing a file — configs can be produced by other means than this schema —
+/// but the author should hear about it here first.
+///
+/// This rule is written down in three places, and this is the only one that
+/// enforces it. `envfile.ValidateName` re-implements it in Go as defense in
+/// depth, and `config.EvalError.Hint` matches the *text* of this pattern in
+/// Pkl's diagnostic to decide whether to explain it. Changing the regex here
+/// silently stops that hint from firing, so change all three together.
+typealias EnvName = String(matches(Regex("[A-Za-z_][A-Za-z0-9_]*")))
+
+/// The environment variables this config defines.
+///
+/// Hidden because [resolved] is the shape pklenv consumes; exposing both would
+/// render every variable twice. Amending it works exactly as normal.
+///
+/// A `Mapping` rather than a `Dynamic` — the bracketed keys cost some
+/// readability against `NAME = "value"`, but `Dynamic` cannot constrain either
+/// half of the pair: a `Listing` or a `null` would pass straight through and be
+/// stringified into `"new Listing { ... }"` or `"null"`, silently, all the way
+/// onto disk.
+hidden vars: Mapping<EnvName, VarValue> = new {}
+
+/// Glob patterns matching the names of variables whose values must be masked
+/// wherever pklenv prints them — its own output, and the output of the child
+/// process under `pklenv run`.
+///
+/// Redaction is opt-in: nothing is masked unless a glob here matches or a
+/// [Var.redact] flag says so. Values read from the environment are *not*
+/// sensitive by default.
+///
+/// This is output masking, not access control: a config that reads a value can
+/// still pass it anywhere, and a child process under `pklenv run` can write it
+/// somewhere pklenv never sees.
+redactions: Listing<String>(isDistinct) = new {}
+
+/// The normalized view of [vars] that the pklenv CLI consumes.
+///
+/// Not part of the authoring surface — write [vars] instead.
+fixed resolved: Mapping<String, Var> =
+  vars
+    .toMap()
+    .mapValues((_, v) -> if (v is Var) v else new Var { value = v.toString() })
+    .toMapping()

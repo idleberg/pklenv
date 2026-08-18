@@ -1,0 +1,72 @@
+# The same gates hk runs on commit and push, run where a contributor cannot skip
+# them. Toolchain versions come from mise.toml rather than being repeated here,
+# so a bump in one place moves local and CI together.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      # Installs go, pkl and golangci-lint at the versions mise.toml pins. pkl
+      # is not optional: pkl-go evaluates by spawning `pkl server`, and without
+      # it every integration test skips itself and the suite passes vacuously.
+      - uses: jdx/mise-action@v3
+        with:
+          install: true
+          cache: true
+
+      - name: pkl is on PATH
+        run: pkl --version
+
+      - name: Build
+        run: mise run build
+
+      - name: Test
+        run: mise run test
+
+      - name: Lint
+        run: mise run lint
+
+      # Formatting is checked rather than applied: a job that rewrites files has
+      # nowhere to put them, and "your diff is unformatted" is the actionable
+      # message.
+      - name: Formatting is clean
+        run: |
+          mise run fmt
+          git diff --exit-code
+
+  # Split out because it needs no toolchain beyond Go and should not be gated on
+  # the matrix finishing. Advisories land independently of anything in the diff.
+  vulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: jdx/mise-action@v3
+        with:
+          install: true
+          cache: true
+
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

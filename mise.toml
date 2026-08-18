@@ -1,0 +1,32 @@
+[tools]
+go = "1.26"
+pkl = "0.32"
+golangci-lint = "2"
+hk = "1"
+
+[env]
+# Keep builds static and CGO-free — see PLAN.md "OS/arch matrix".
+CGO_ENABLED = "0"
+
+[tasks.build]
+description = "Build the pklenv binary into ./bin"
+run = "go build -o bin/pklenv ./cmd/pklenv"
+
+[tasks.test]
+description = "Run the Go test suite"
+run = "go test ./..."
+
+[tasks.fmt]
+description = "Format Go and Pkl sources"
+run = ["go fmt ./...", "pkl format --write pkl"]
+
+[tasks.lint]
+description = "Vet and lint Go sources"
+run = ["go vet ./...", "golangci-lint run"]
+
+[tasks.check]
+description = "Everything the pre-commit hook runs, across all files"
+run = "hk check --all"
+
+[tasks.run]
+run = ["go run ./cmd/pklenv"]

@@ -1,0 +1,23 @@
+# go.mod and go.sum already pin exact versions with content hashes — that is
+# what pinning is in Go. What is missing is a reason to move: this is it.
+#
+# Grouped into one PR per ecosystem per week rather than one per dependency.
+# A tree this small does not generate enough churn to justify separate PRs, and
+# a single grouped one gets a single CI run and a single review.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

@@ -1,0 +1,59 @@
+amends "package://github.com/jdx/hk/releases/download/v1.55.0/hk@1.55.0#/Config.pkl"
+
+import "package://github.com/jdx/hk/releases/download/v1.55.0/hk@1.55.0#/Builtins.pkl"
+
+local linters = new Mapping<String, Step> {
+  // ---- formatting -------------------------------------------------------
+  ["gofmt"] = Builtins.go_fmt
+  ["pkl_format"] = Builtins.pkl_format
+
+  // ---- linting ----------------------------------------------------------
+  ["go_vet"] = Builtins.go_vet
+  ["golangci_lint"] = Builtins.golangci_lint
+
+  // Pkl's own type checker over the schema and the test fixtures. Catches a
+  // schema change that breaks the Go structs before the Go tests do, and the
+  // failure message points at the Pkl line rather than at a decode warning.
+  ["pkl_check"] {
+    glob = List("pkl/*.pkl")
+    check = "pkl eval --format json {{files}} >/dev/null"
+    exclusive = true
+  }
+
+  // ---- tests ------------------------------------------------------------
+  //
+  // Not file-scoped: Go tests run per package, and a change in one package
+  // routinely breaks another's tests. Passing {{files}} here would test the
+  // wrong thing and pass when it should not.
+  //
+  // exclusive so it runs alone, after the formatters have settled — testing a
+  // tree that a fixer is still rewriting produces confusing failures.
+  ["go_test"] {
+    glob = List("**/*.go", "pkl/*.pkl", "go.mod", "go.sum")
+    check = "go test ./..."
+    exclusive = true
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps = linters
+  }
+
+  // Belt and braces before anything leaves the machine: the same steps across
+  // every file, not just the staged ones.
+  ["pre-push"] {
+    steps = linters
+  }
+
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+
+  ["check"] {
+    steps = linters
+  }
+}

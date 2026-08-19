@@ -29,4 +29,5 @@ description = "Everything the pre-commit hook runs, across all files"
 run = "hk check --all"
 
 [tasks.cli]
-run = ["go run ./cmd/pklenv"]
+description = "Shortcut for running the pklenv CLI with the test config"
+run = ["go run ./cmd/pklenv --working-dir internal/config/testdata"]

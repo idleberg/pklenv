@@ -20,11 +20,11 @@ go install github.com/idleberg/pklenv/cmd/pklenv@latest
 ```
 
 > [!IMPORTANT]
-> The [`pkl` CLI](https://pkl-lang.org/main/current/pkl-cli) has to be on `PATH`
+> The [`pkl`](https://pkl-lang.org/main/current/pkl-cli) CLI has to be on `PATH`
 > at runtime — `pklenv` evaluates by spawning `pkl server` and speaking its
 > protocol. Install it however you manage tools; the
 > [installation guide](https://pkl-lang.org/main/current/pkl-cli/index.html#installation)
-> covers Homebrew, Mise, a JVM jar and native binaries.
+> covers Homebrew, Mise, Winget, a JVM jar and native binaries.
 
 ## Configuring
 

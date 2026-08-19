@@ -28,7 +28,7 @@ go install github.com/idleberg/pklenv/cmd/pklenv@latest
 
 ### Homebrew
 
-Linux and macOS users may use [Homebrew](https://brew.sh/) to install both:
+Linux and macOS users may use [Homebrew](https://brew.sh/) to install both tools, `pkl` and `pklenv`:
 
 ```bash
 brew install idleberg/asahi/pklenv

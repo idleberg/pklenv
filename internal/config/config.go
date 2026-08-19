@@ -78,6 +78,19 @@ func (c *Config) SecretValues() []string {
 type Options struct {
 	// Env is the ambient environment to draw from. nil means the process's own.
 	Env []string
+
+	// RootDir is the root directory for file-based reads inside the Pkl
+	// evaluator. Attempts to read a file:// resource outside this tree are
+	// rejected by Pkl.
+	//
+	// When empty, Load sets it to the directory that contains the config file
+	// being evaluated, which is the natural trust boundary: a config can reach
+	// other files in its own project but cannot traverse above it.
+	//
+	// Set it explicitly only when you need a wider or different boundary, for
+	// example when configs live in a subdirectory but must reach a shared
+	// schema kept at the project root.
+	RootDir string
 }
 
 // EvalError is a failure reported by Pkl itself, as opposed to one pklenv
@@ -202,7 +215,7 @@ func Load(ctx context.Context, path string, opts Options) (*Config, error) {
 		return nil, fmt.Errorf("reading %s: %w", path, err)
 	}
 
-	ev, err := newEvaluator(ctx, opts)
+	ev, err := newEvaluator(ctx, opts, filepath.Dir(abs))
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +243,11 @@ func Load(ctx context.Context, path string, opts Options) (*Config, error) {
 
 // newEvaluator builds the evaluator a config is resolved with.
 //
+// configDir is the directory that contains the config file. It is used as the
+// RootDir unless Options.RootDir overrides it. Either way, Pkl rejects any
+// file:// read that escapes the root, which keeps a config from crawling the
+// filesystem above its project.
+//
 // There is no environment allowlist. pklenv once gated `read("env:NAME")` on a
 // per-name grant, which forced Load to evaluate twice — the grant list lived
 // inside the very file it governed, so a discovery pass had to read it before
@@ -244,14 +262,20 @@ func Load(ctx context.Context, path string, opts Options) (*Config, error) {
 //
 // If pklenv ever sandboxes untrusted configs, the unit is every resource kind
 // and module source at once, not the environment on its own.
-func newEvaluator(ctx context.Context, opts Options) (pkl.Evaluator, error) {
+func newEvaluator(ctx context.Context, opts Options, configDir string) (pkl.Evaluator, error) {
 	ambient := opts.Env
 	if ambient == nil {
 		ambient = os.Environ()
 	}
 
+	rootDir := opts.RootDir
+	if rootDir == "" {
+		rootDir = configDir
+	}
+
 	return pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions, func(o *pkl.EvaluatorOptions) {
 		o.Env = envMap(ambient)
+		o.RootDir = rootDir
 	})
 }
 

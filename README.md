@@ -26,6 +26,12 @@ go install github.com/idleberg/pklenv/cmd/pklenv@latest
 > [installation guide](https://pkl-lang.org/main/current/pkl-cli/index.html#installation)
 > covers Homebrew, Mise, Winget, a JVM jar and native binaries.
 
+Linux and macOS users may use [Homebrew](https://brew.sh/) to install both:
+
+```bash
+brew install idleberg/asahi/pklenv
+```
+
 ## Configuring
 
 File naming mirrors the dotenv convention:

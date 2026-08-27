@@ -1,6 +1,6 @@
 module github.com/idleberg/pklenv
 
-go 1.26.6
+go 1.27.0
 
 require (
 	github.com/apple/pkl-go v0.14.0
@@ -41,7 +41,6 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xo/terminfo v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297 // indirect
-	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 )

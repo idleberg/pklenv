@@ -241,8 +241,8 @@ hk install            # formatting, linting and tests on commit
 
 Dual-licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-- MIT License ([LICENSE-MIT](LICENSE-MIT))
+- [Apache License, Version 2.0](LICENSE-APACHE)
+- [MIT License](LICENSE-MIT)
 
 at your option. Unless you state otherwise, any contribution you intentionally
 submit for inclusion in this work, as defined in the Apache-2.0 license, is

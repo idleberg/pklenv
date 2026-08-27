@@ -25,12 +25,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Installs go, pkl and golangci-lint at the versions mise.toml pins. pkl
       # is not optional: pkl-go evaluates by spawning `pkl server`, and without
       # it every integration test skips itself and the suite passes vacuously.
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install: true
           cache: true
@@ -61,9 +61,9 @@ jobs:
     name: govulncheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install: true
           cache: true

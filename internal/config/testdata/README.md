@@ -7,7 +7,7 @@ poking at the CLI by hand.
 **These fixtures write `.env*` files into this directory.** They are gitignored;
 `rm -f .env*` when you're done.
 
-The fixtures amend `env-schema.pkl`, the vendored schema `pklenv` writes from
+The fixtures amend `.pklenv/schema.pkl`, the vendored schema `pklenv` writes from
 its own binary. It is committed, and any command run here regenerates it if the
 binary has moved on — which is the behaviour worth watching after touching
 `schema/PklEnv.pkl`.

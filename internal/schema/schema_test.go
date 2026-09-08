@@ -22,6 +22,20 @@ func config(t *testing.T, dir string) string {
 	return path
 }
 
+// writeTarget puts content where Ensure expects the vendored copy, creating the
+// .pklenv directory Ensure would otherwise create itself.
+func writeTarget(t *testing.T, dir, content string, mode os.FileMode) string {
+	t.Helper()
+	target := filepath.Join(dir, filepath.FromSlash(Filename))
+	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(target, []byte(content), mode); err != nil {
+		t.Fatal(err)
+	}
+	return target
+}
+
 func TestWritesWhenReferencedAndNotOtherwise(t *testing.T) {
 	dir := t.TempDir()
 	cfg := config(t, dir)
@@ -33,7 +47,7 @@ func TestWritesWhenReferencedAndNotOtherwise(t *testing.T) {
 	if outcome != Written {
 		t.Errorf("outcome = %v, want Written", outcome)
 	}
-	body, err := os.ReadFile(filepath.Join(dir, Filename))
+	body, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(Filename)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +65,7 @@ func TestWritesWhenReferencedAndNotOtherwise(t *testing.T) {
 	if outcome, err := Ensure(quiet); err != nil || outcome != Unchanged {
 		t.Errorf("outcome = %v, err = %v; want Unchanged and no file", outcome, err)
 	}
-	if _, err := os.Stat(filepath.Join(other, Filename)); !errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(other, filepath.FromSlash(Filename))); !errors.Is(err, os.ErrNotExist) {
 		t.Error("no copy should be written for a config that does not reference it")
 	}
 }
@@ -65,7 +79,7 @@ func TestCurrentCopyIsLeftAlone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	target := filepath.Join(dir, Filename)
+	target := filepath.Join(dir, filepath.FromSlash(Filename))
 	before, err := os.Stat(target)
 	if err != nil {
 		t.Fatal(err)
@@ -97,7 +111,7 @@ func TestTamperedCopyIsReplaced(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	target := filepath.Join(dir, Filename)
+	target := filepath.Join(dir, filepath.FromSlash(Filename))
 	tampered := "// " + marker + "; do not edit.\nbackdoor = read(\"env:AWS_SECRET_ACCESS_KEY\")\n"
 	if err := os.WriteFile(target, []byte(tampered), 0o644); err != nil {
 		t.Fatal(err)
@@ -128,11 +142,8 @@ func TestForeignFileIsNotClobbered(t *testing.T) {
 	dir := t.TempDir()
 	cfg := config(t, dir)
 
-	target := filepath.Join(dir, Filename)
 	mine := "// something a user wrote themselves\nfoo = 1\n"
-	if err := os.WriteFile(target, []byte(mine), 0o600); err != nil {
-		t.Fatal(err)
-	}
+	target := writeTarget(t, dir, mine, 0o600)
 
 	if _, err := Ensure(cfg); !errors.Is(err, ErrForeign) {
 		t.Errorf("err = %v, want ErrForeign", err)
@@ -163,13 +174,13 @@ func TestReadOnlyDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 		stale := "// " + marker + "; do not edit.\n// an older release wrote this\n"
-		if err := os.WriteFile(filepath.Join(dir, Filename), []byte(stale), 0o644); err != nil {
+		target := writeTarget(t, dir, stale, 0o644)
+		// The .pklenv directory is the one Ensure writes into, so that is the one
+		// a read-only checkout makes unwritable.
+		if err := os.Chmod(filepath.Dir(target), 0o555); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.Chmod(dir, 0o555); err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+		t.Cleanup(func() { _ = os.Chmod(filepath.Dir(target), 0o755) })
 
 		outcome, err := Ensure(cfg)
 		if err != nil {

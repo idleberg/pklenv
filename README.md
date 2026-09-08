@@ -45,7 +45,7 @@ File naming mirrors the dotenv convention:
 | `.env.production` | `env.production.pkl` |
 
 ```pkl
-amends "env-schema.pkl"
+amends ".pklenv/schema.pkl"
 
 redactions { "*_TOKEN"; "*_SECRET" }
 
@@ -57,7 +57,7 @@ vars {
 }
 ```
 
-`env-schema.pkl` is the schema module, and `pklenv` writes it for you: it ships
+`.pklenv/schema.pkl` is the schema module, and `pklenv` writes it for you: it ships
 inside the binary, and any command that evaluates a config referencing it drops
 a copy alongside. Nothing is fetched over the network, so `pkl eval` and your
 editor resolve it too.

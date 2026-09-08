@@ -192,7 +192,7 @@ func TestWorkingDirGovernsEverything(t *testing.T) {
 	}
 	// The schema is vendored where the configs are, so it lands inside the root
 	// boundary without anyone having to widen it.
-	if _, err := os.Stat(filepath.Join(sub, schema.Filename)); err != nil {
+	if _, err := os.Stat(filepath.Join(sub, filepath.FromSlash(schema.Filename))); err != nil {
 		t.Errorf("the schema should be vendored beside the configs: %v", err)
 	}
 }
@@ -209,7 +209,7 @@ func TestSchemaIsVendoredWithoutNetworkAccess(t *testing.T) {
 		t.Fatalf("a plain config should evaluate with no permission flags: %v\n%s", err, stderr)
 	}
 
-	body, err := os.ReadFile(filepath.Join(dir, schema.Filename))
+	body, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(schema.Filename)))
 	if err != nil {
 		t.Fatal(err)
 	}

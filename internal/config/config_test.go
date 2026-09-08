@@ -329,7 +329,7 @@ func TestEvalErrorHints(t *testing.T) {
 // the drift is made loud rather than being left to chance. Regenerate with
 // `pklenv emit env.pkl --force` from inside testdata.
 func TestVendoredTestdataSchemaIsCurrent(t *testing.T) {
-	vendored, err := os.ReadFile(filepath.Join("testdata", schema.Filename))
+	vendored, err := os.ReadFile(filepath.Join("testdata", filepath.FromSlash(schema.Filename)))
 	if err != nil {
 		t.Fatal(err)
 	}

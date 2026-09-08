@@ -6,7 +6,7 @@
 // beside your configs, so the contract a config is checked against travels with
 // the tool rather than being fetched over the network on every evaluation:
 //
-//     amends "env-schema.pkl"
+//     amends ".pklenv/schema.pkl"
 //
 //     redactions { "*_TOKEN"; "*_SECRET" }
 //

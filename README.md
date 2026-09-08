@@ -2,8 +2,6 @@
 
 > Typed, cascading environment config backed by [Pkl](https://pkl-lang.org).
 
-![License](https://img.shields.io/github/license/idleberg/pklenv?style=for-the-badge)
-![Version](https://img.shields.io/github/v/release/idleberg/pklenv?sort=semver&style=for-the-badge)
 [![Build](https://img.shields.io/github/actions/workflow/status/idleberg/pklenv/ci.yml?style=for-the-badge)](https://github.com/idleberg/pklenv/actions)
 
 `.pkl` files are the source of truth: they cascade via `amends`, they are typed,
